@@ -1,0 +1,42 @@
+
+1. ГДЕ ИСКАТЬ исполняемый файл:
+
+SET EMSDKPATH=C:\bin\emsdk ::(у меня) C:\Program Files\Emscipten\emsdk
+
+CALL %EMSDKPATH%\emsdk_env.bat :: -//- приглашение для работы с компилятором
+
+2. Компиляция
+
+2.1. emcc fib.c -s WASM=1 -o fib.html полная компиляция 
+2.2. emcc -O1 fib.c -g -o fib.html -s WASM=1 -s NO_EXIT_RUNTIME=1 -s NO_FILESYSTEM=1 -fno-exceptions -fno-rtti --llvm-lto 1--emrun
+2.3. emcc -O1 hello.c -g -o hello.html -s WASM=1 -s NO_EXIT_RUNTIME=1 -s NO_FILESYSTEM=1 -fno-exceptions -fno-rtti --llvm-lto 1 --emrun
+2.4. emcc fib_c.c -O3 -s WASM=1 -s ONLY_MY_CODE=1 -s EXPORTED_FUNCTIONS="['_fibonacci']" -s NO_EXIT_RUNTIME=1 --emrun -o fib_c.js
+
+ - без лишних и не нужных вещей 
+	++++
+      --emrun - для нормальных запусков веб-сервера
+Главное отличие здесь это добавлении опции -s WASM=1. Остальные -s и -f добавлены в попытках объяснить Emscripten что нам НЕ нужно. Emscripten умеет слишком много, и поэтому «на всякий случай», «вдруг понадобится» он много чего добавляет в результирующие файлы.
+
+В результате компиляции мы также получаем fib.html, плюс fib.js (набор сервисных функций Emscripten), плюс наконец-то fib.wasm.
+
+3. Запуск сервера (с чем связано)
+//
+The html page you are running is not emrun-capable. Stdout, stderr and exit(returncode) capture will not work. Recompile the application with the --emrun linker flag to enable this, or pass --no_emrun_detect to emrun to hide this check.
+
+3.1. emrun [emrun_options] filename.html [html_cmdline_options]
+3.2. emrun --no_browser fib.html --port 8080 
+
+
+4. EXPORT FUNCTION 
+
+3.1.EMSCRIPTEN_KEEPALIVE 
+3.2. EXPORTED_FUNCTIONS="['_add']"
+
+5. Если вы пишете на C++, не забудьте поместить любую функцию, которую вы хотите сделать доступной, внутри блока extern "C", чтобы C++ не задекорировал имя функции (это то, что делает C++, а не баг WebAssembly или Emscripten).
+#if defined(__cplusplus)
+#define cppexport extern "c" // to prevent C++ name mangling
+#else
+#define cppexport
+#endif
+
+

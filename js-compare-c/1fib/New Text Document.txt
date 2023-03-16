@@ -1,0 +1,9 @@
+function c_fib(i){
+    if ("WebAssembly" in window) {
+        WebAssembly.instantiateStreaming(fetch("fib_c.wasm"))
+            .then(result => 
+                document.getElementById("container").innerHTML = 
+                "Result: " + result.instance.exports._fibonacci(i)   
+        ).catch(console.error);
+		}	
+	}

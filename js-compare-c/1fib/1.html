@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>WebAssembly Application</title>
+	<script>	
+	function out(result, time, type, n){
+    var p = document.createElement('h4');
+    document.body.appendChild(p);
+    p.appendChild(document.createTextNode(type+'::'+'; for series ='+n+'; Result = '+result+'; Time='+time));
+	}		
+
+function loadWebAssembly(fileName) {
+  return fetch(fileName)
+    .then(response => response.arrayBuffer())
+    .then(bits => WebAssembly.compile(bits))
+    .then(module => { return new WebAssembly.Instance(module) });
+};
+ function  fib(n){ 
+ return loadWebAssembly('fib_c.wasm')
+  .then(instance => {
+   return instance.exports._fibonacci(n) });  
+  }  
+	
+	function simpleFib(n) {
+                let i, t, a = 0, b = 1;
+                for (i = 0; i < n; i++) {
+                    t = a + b; a = b; b = t;
+                }
+                return b;
+            }		
+
+   
+   function a2(n) {   
+   if ("WebAssembly" in window) {
+        WebAssembly.instantiateStreaming(fetch('fib_c.wasm'))
+            .then(result => {
+			 let t0 = performance.now();
+             let res1 = result.instance.exports._fibonacci(n);
+		 	let t1 = performance.now();
+		    out(res1, t1-t0, 'WASM',n);	
+		 t0 = performance.now();
+    res1 = simpleFib(n);
+    t1 = performance.now();
+    out(res1, t1-t0, 'JS',n);
+}).catch(console.error);
+    }
+   }
+   
+    </script>
+    </head>
+ <body>
+		<p>Input n-series</p>
+		<input  id='insertedName' />
+		<button type="button" id="jstrigger" onclick="javascript:a2(insertedName.value);">Сравнить</button>
+	</body>
+</html>
